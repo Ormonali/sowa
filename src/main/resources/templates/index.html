@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Todo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+          --bg: #0b1020; --panel: #111832; --panel-2: #0e1530; --text: #e9ecf1; --muted: #a8b3cf;
+          --brand: #5b8cff; --brand-2: #86a7ff; --ok: #21c17a; --danger: #ff6b6b; --border: #21305c;
+          --shadow: 0 10px 30px rgba(0,0,0,.35); --radius: 16px;
+        }
+        @media (prefers-color-scheme: light) {
+          :root{ --bg:#f7f8fb; --panel:#fff; --panel-2:#f4f6fb; --text:#0e1428; --muted:#4a5570;
+            --brand:#365cff; --brand-2:#5b7bff; --ok:#199a62; --danger:#e14d4d; --border:#e4e8f4;
+            --shadow: 0 10px 25px rgba(10, 22, 70, 0.08);
+          }
+        }
+        *{box-sizing:border-box} html,body{height:100%}
+        body{margin:0;font-family:ui-sans-serif,-apple-system,Segoe UI,Roboto,Inter,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";color:var(--text);
+          background:radial-gradient(1000px 600px at 10% -10%, rgba(91,140,255,.18), transparent 55%),
+                     radial-gradient(900px 500px at 100% 0%, rgba(134,167,255,.15), transparent 50%),
+                     var(--bg);
+          display:grid;place-items:start center;padding:32px 16px 64px}
+        .app{width:min(850px,100%);background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:clip}
+        header{padding:24px 24px 12px;border-bottom:1px solid var(--border);
+          background:radial-gradient(600px 200px at -10% -10%, rgba(91,140,255,.18), transparent 40%),
+                     radial-gradient(500px 160px at 110% -30%, rgba(134,167,255,.12), transparent 45%)}
+        header h1{margin:0;font-size:28px;letter-spacing:.2px}
+        header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+        .bar{display:flex;gap:12px;padding:16px 24px 20px;background:linear-gradient(0deg, rgba(0,0,0,.06), transparent);border-bottom:1px solid var(--border);flex-wrap:wrap}
+        .input{flex:1 1 280px;display:flex;gap:10px;background:#00000010;border:1px solid var(--border);border-radius:12px;padding:10px 12px;align-items:center}
+        .input input[type="text"]{border:none;outline:none;background:transparent;color:var(--text);width:100%;font-size:16px}
+        .btn{appearance:none;border:1px solid var(--border);background:linear-gradient(180deg,var(--brand),var(--brand-2));color:white;padding:10px 14px;font-weight:600;border-radius:12px;cursor:pointer;transition:transform .05s ease, filter .2s ease, opacity .2s ease;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(54,92,255,.35)}
+        .btn:hover{filter:brightness(1.05)} .btn:active{transform:translateY(1px)} .btn.ghost{background:transparent;color:var(--text);box-shadow:none}
+        .btn.danger{background:linear-gradient(180deg,var(--danger),#ff9b9b);border-color:transparent;color:#1e0e10;box-shadow:0 6px 18px rgba(255,107,107,.25)}
+        ul.list{list-style:none;margin:0;padding:12px 12px 4px;display:grid;gap:10px}
+        .todo-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 14px;background:#00000012;border:1px solid var(--border);border-radius:12px;transition:background .2s ease, border-color .2s ease}
+        .todo-item:hover{background:#00000018;border-color:#2a3a70}
+        .todo-row{display:inline-flex;align-items:center;gap:12px}
+        .todo-item input[type="checkbox"]{width:18px;height:18px;accent-color:var(--ok);cursor:pointer}
+        .title{font-size:16px;line-height:1.4}
+        .todo-item.done .title{text-decoration:line-through;color:var(--muted)}
+        .actions{display:flex;gap:8px}
+        .empty{display:grid;place-items:center;padding:36px 14px;color:var(--muted);background:#00000008;border:1px dashed var(--border);border-radius:12px;text-align:center;gap:10px}
+        footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 24px 24px;color:var(--muted);font-size:14px}
+        .count{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#00000008}
+        .visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+        .error{color:var(--danger);font-size:14px;margin:0 24px 16px}
+    </style>
+</head>
+<body>
+<main class="app" aria-labelledby="title">
+    <header>
+        <h1 id="title">Todo</h1>
+        <p>Lightweight tasks with a sleek UI.</p>
+    </header>
+
+    <section class="bar">
+        <form id="todoForm" class="input" autocomplete="off" aria-describedby="err">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="text" name="title" placeholder="Add a new task…" required aria-label="Task title" />
+            <button class="btn" type="submit" title="Add task">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
+                Add
+            </button>
+        </form>
+    </section>
+
+    <p id="err" class="error" role="alert" hidden></p>
+
+    <ul class="list" id="list"></ul>
+
+    <footer>
+        <div class="count" aria-live="polite" aria-atomic="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>
+            <span><strong id="remaining">0</strong> remaining out of <span id="total">0</span></span>
+        </div>
+        <span class="visually-hidden" id="sr-updates" aria-live="polite"></span>
+    </footer>
+</main>
+
+<script>
+    // --- Accessibility helpers ---
+    function announce(msg){
+      const sr = document.getElementById('sr-updates');
+      sr.textContent = '';
+      setTimeout(() => sr.textContent = msg, 50);
+    }
+    function showError(message){
+      const el = document.getElementById('err');
+      el.textContent = message;
+      el.hidden = !message;
+    }
+
+    // --- App state ---
+    let todos = [];
+
+    // --- API helpers (JSON everywhere) ---
+    async function apiGetTodos(){
+      const res = await fetch('/', { headers: { 'Accept': 'application/json' } });
+      if(!res.ok) throw new Error('Failed to load todos');
+      // Content-Type might be missing on backend; still try to parse as JSON:
+      const text = await res.text();
+      try { return JSON.parse(text); } catch { throw new Error('Invalid JSON from server'); }
+    }
+
+    async function apiCreateTodo(text){
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ text, completed: false })
+      });
+      if(!res.ok) throw new Error('Failed to create todo');
+      const t = await res.json();
+      return t;
+    }
+
+    async function apiUpdateTodo(todo){
+      const res = await fetch('/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(todo)
+      });
+      if(!res.ok) throw new Error('Failed to update todo');
+      const t = await res.json();
+      return t;
+    }
+
+    async function apiDeleteTodo(id){
+      const res = await fetch('/', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
+        body: JSON.stringify({ id, text: '', completed: false })
+      });
+      if(!res.ok) throw new Error('Failed to delete todo');
+      return true;
+    }
+
+    // --- Rendering ---
+    function render(){
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+
+      if(todos.length === 0){
+        list.innerHTML = `
+          <li class="empty">
+            <div>
+              <p>No tasks yet.</p>
+              <p>Add your first one above!</p>
+            </div>
+          </li>`;
+      } else {
+        for(const t of todos.sort((a,b)=>a.id-b.id)){
+          const li = document.createElement('li');
+          li.className = 'todo-item' + (t.completed ? ' done' : '');
+          li.innerHTML = `
+            <div class="todo-row">
+              <input type="checkbox" ${t.completed ? 'checked' : ''} aria-label="Toggle ${escapeHtml(t.text)}" />
+              <span class="title">${escapeHtml(t.text)}</span>
+            </div>
+            <div class="actions">
+              <button class="btn ghost" aria-label="Toggle"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>Toggle</button>
+              <button class="btn danger" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12M9 7v10m6-10v10M4 7h16M10 4h4" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/></svg>Delete</button>
+            </div>
+          `;
+          // Events
+          li.querySelector('input[type="checkbox"]').addEventListener('change', () => toggleTodo(t.id));
+          li.querySelector('.btn.ghost').addEventListener('click', (e) => { e.preventDefault(); toggleTodo(t.id); });
+          li.querySelector('.btn.danger').addEventListener('click', (e) => { e.preventDefault(); removeItem(t.id); });
+          list.appendChild(li);
+        }
+      }
+
+      // counters
+      document.getElementById('total').textContent = String(todos.length);
+      const remaining = todos.filter(t=>!t.completed).length;
+      document.getElementById('remaining').textContent = String(remaining);
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#39;");
+    }
+
+    // --- Actions ---
+    async function addTodo(e){
+      e.preventDefault();
+      showError('');
+      const input = document.querySelector('#todoForm input[name="title"]');
+      const text = input.value.trim();
+      if(!text) return;
+
+      try{
+        const created = await apiCreateTodo(text);
+        todos.push(created);
+        input.value = '';
+        announce('Task added.');
+        render();
+      }catch(err){
+        showError(err.message || 'Could not add task.');
+      }
+    }
+
+    async function toggleTodo(id){
+      showError('');
+      try{
+        const idx = todos.findIndex(t=>t.id===id);
+        if(idx === -1) return;
+        const updated = { ...todos[idx], completed: !todos[idx].completed };
+        const saved = await apiUpdateTodo(updated);
+        todos[idx] = saved;
+        announce('Task toggled.');
+        render();
+      }catch(err){
+        showError(err.message || 'Could not toggle task.');
+      }
+    }
+
+    async function removeItem(id){
+      showError('');
+      try{
+        await apiDeleteTodo(id);
+        todos = todos.filter(t=>t.id!==id);
+        announce('Task deleted.');
+        render();
+      }catch(err){
+        showError(err.message || 'Could not delete task.');
+      }
+    }
+
+    // --- Init ---
+    document.getElementById('todoForm').addEventListener('submit', addTodo);
+
+    (async function init(){
+      try{
+        todos = await apiGetTodos();
+        render();
+      }catch(err){
+        showError(err.message || 'Failed to load tasks.');
+        render();
+      }
+    })();
+</script>
+</body>
+</html>
