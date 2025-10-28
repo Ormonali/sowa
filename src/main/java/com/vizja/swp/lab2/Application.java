@@ -11,7 +11,7 @@ public class Application {
         try (final var server = new Server()) {
             FrontController.addRoute("/", new HomeController());
 
-            server.start(8080);
+            server.start(8090);
         }
     }
 }

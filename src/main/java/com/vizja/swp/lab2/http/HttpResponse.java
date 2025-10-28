@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.vizja.lab3.lib.http.HttpUtil.*;
+import static com.vizja.swp.lab2.http.HttpUtil.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class HttpResponse {

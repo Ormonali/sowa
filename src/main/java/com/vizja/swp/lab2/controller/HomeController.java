@@ -1,5 +1,6 @@
 package com.vizja.swp.lab2.controller;
 
+import com.vizja.swp.lab2.http.Cookie;
 import com.vizja.swp.lab2.dto.Todo;
 import com.vizja.swp.lab2.lib.BaseController;
 import com.vizja.swp.lab2.lib.http.HttpRequest;
@@ -30,7 +31,6 @@ public class HomeController extends BaseController {
 
     @Override
     public void doGet(HttpRequest request, HttpResponse response) {
-        // Serve the HTML file from the filesystem (like DashboardController)
         try {
             Path path = Path.of(INDEX_HTML);
 
@@ -43,8 +43,12 @@ public class HomeController extends BaseController {
             response.setStatus(200, "OK");
             response.setHeader("Content-Type", "text/html; charset=UTF-8");
 
+            String cookieHeader = String.valueOf(request.getHeader("Cookie"));
+            if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                response.getWriter().println("<!-- Cookies: " + cookieHeader + " -->");
+            }
+
             try (PrintWriter writer = response.getWriter()) {
-                // Stream line-by-line to the response
                 Files.lines(path, StandardCharsets.UTF_8).forEach(writer::println);
             }
         } catch (IOException e) {
@@ -62,6 +66,13 @@ public class HomeController extends BaseController {
             int newId = todos.size() + 1;
             Todo todoWithId = new Todo(newId, newTodo.text(), newTodo.completed());
             todos.add(todoWithId);
+
+            Cookie cookie = new Cookie("lastTodo", newTodo.text())
+                    .setPath("/")
+                    .setHttpOnly(true)
+                    .setMaxAge(3600); 
+
+            response.setHeader("Set-Cookie", cookie.toString());
 
             response.setStatus(201, "Created");
             response.setHeader("Content-Type", "application/json");
@@ -85,6 +96,13 @@ public class HomeController extends BaseController {
                     todos.add(updatedTodo);
                     response.setStatus(200, "OK");
                     response.setHeader("Content-Type", "application/json");
+
+                    Cookie cookie = new Cookie("lastUpdatedTodo", updatedTodo.text())
+                            .setPath("/")
+                            .setHttpOnly(true)
+                            .setMaxAge(1800); // 30 minutes
+                    response.setHeader("Set-Cookie", cookie.toString());
+
                     String jsonTodo = objectMapper.writeValueAsString(updatedTodo);
                     response.getWriter().println(jsonTodo);
                     return;
@@ -108,6 +126,12 @@ public class HomeController extends BaseController {
             for (Todo todo : new ArrayList<>(todos)) {
                 if (todo.id().equals(todoToDelete.id())) {
                     todos.remove(todo);
+
+                    Cookie deleteCookie = new Cookie("lastTodo", "")
+                            .setPath("/")
+                            .setMaxAge(0);
+                    response.setHeader("Set-Cookie", deleteCookie.toString());
+
                     response.setStatus(200, "OK");
                     response.getWriter().println("Todo with ID " + todoToDelete.id() + " deleted.");
                     return;

@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.vizja.lab3.lib.http.HttpUtil.HEADER_CONTENT_LENGTH;
-import static com.vizja.lab3.lib.http.HttpUtil.HEADER_COOKIE;
+import static com.vizja.swp.lab2.http.HttpUtil.HEADER_CONTENT_LENGTH;
+import static com.vizja.swp.lab2.http.HttpUtil.HEADER_COOKIE;
 
 public class HttpRequest {
     @Getter
